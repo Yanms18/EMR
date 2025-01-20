@@ -1,2 +1,3 @@
-import patient0
-print ("OK")
+from patient0 import create_patient0
+payload = create_patient0("Daisy", "Sunday", 35, "Female")
+print(payload)
