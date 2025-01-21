@@ -31,7 +31,7 @@ def create_patient0(firstname, lastname, age, sex, gender):
             "valueCode": sex
         }],
         "gender":
-        gender, 
+        gender,
         "active":
         True,
         "name": [{
@@ -42,8 +42,47 @@ def create_patient0(firstname, lastname, age, sex, gender):
         "birthDate":
         age_to_iso_birthday_fixed(age)
     }
+    data = {
+        "resource": {
+            "resourceType": "Appointment",
+            "status": "booked",
+            "appointmentType": {
+                "coding": [
+                    {
+                        "system": "http://snomed.info/sct",
+                        "code": "448337001",
+                        "display": "Telemedicine consultation with patient (procedure)"
+                    }
+                ]
+            },
+            "description": "Weekly check-in.",
+            "supportingInformation": [
+                {
+                    "reference": "Location/1"
+                }
+            ],
+            "start": "2025-01-21T13:30:00.000Z",
+            "end": "2025-01-21T14:00:00.000Z",
+            "participant": [
+                {
+                    "actor": {
+                        "reference": "Practitioner/9b31de0f2040478e94e4f9b9b409bce0>"
+                    },
+                    "status": "accepted"
+                },
+                {
+                    "actor": {
+                        "reference": "Patient/2f9ad84fdf2842ccac1a11594904c2b4"
+                    },
+                    "status": "accepted"
+                }
+            ]
+        }
     response = requests.post(patient_url, headers=headers, json=payload)
 
     # Optionally, inspect the response
     print("Status Code:", response.status_code)
     print("Response Body:", response.text)
+
+
+# print URL with patient key in response header
