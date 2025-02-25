@@ -1,5 +1,5 @@
 import os
-import requests
+import pip._vendor.requests as requests 
 import json
 
 XPC_API_KEY = os.environ.get("XPC_API_KEY")
