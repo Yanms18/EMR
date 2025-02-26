@@ -1,9 +1,23 @@
-   from appointment2 import search_patient_by_name, search_practitioner_by_name, create_appointment
+from appointment import search_patient_by_name, search_practitioner_by_name, create_appointment
+from datetime import datetime, timedelta
 
 # Input the names for patient and practitioner.
 patient_name = "Audra Thurs"  
- # Change to the desired patient name.
-practitioner_name = "Amanda Miller"  # Change to the desired practitioner name.
+practitioner_name = "Amanda Miller"
+
+# Input the appointment date and time
+appointment_date = "2025-03-10"  # YYYY-MM-DD format
+appointment_time = "13:30:00"    # HH:MM:SS format
+
+# Combine date and time into a single datetime object
+start_datetime = datetime.strptime(f"{appointment_date}T{appointment_time}", "%Y-%m-%dT%H:%M:%S")
+
+# Calculate end time by adding 1 hour to start time
+end_datetime = start_datetime + timedelta(hours=1)
+
+# Format start and end times in the required format
+start_time = start_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+end_time = end_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 # Search for the patient and practitioner IDs based on their names.
 try:
@@ -23,8 +37,6 @@ except Exception as e:
 # If both IDs are found, proceed to create the appointment.
 if patient_id and practitioner_id:
     reason_text = "Urgent Visit"
-    start_time = "2025-03-10T13:30:00.000Z"  # Set the desired start time.
-    end_time = "2025-03-10T14:00:00.000Z"    # Set the desired end time.
     appointment_type_display = "Telemedicine"  # Options: Home Visit, Telemedicine, Office Visit, Lab Visit, Phone Call
 
     response = create_appointment(
