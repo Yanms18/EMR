@@ -9,9 +9,9 @@ XPC_FHIR_API_BASE_URL = os.environ.get("XPC_FHIR_API_BASE_URL")
 
 
 # Input the patient details
-firstname = "Paulius"
-lastname = "Liday"
-age = 37
+firstname = "John"
+lastname = "titor"
+age = 97
 sex = "M"  # Options: F, M, OTH, UNK
 gender = "male"  # Options: female, male, other, unknown
 
@@ -43,7 +43,6 @@ try:
 except Exception as e:
     print(f"Error finding patient: {e}")
     patient_id = None
-
 
 
 try:
