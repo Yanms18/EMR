@@ -1,9 +1,18 @@
 import os
 import requests
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 
-XPC_API_KEY = os.environ.get("XPC_API_KEY")
-XPC_FHIR_API_BASE_URL = os.environ.get("XPC_FHIR_API_BASE_URL")
+XPC_API_KEY = os.getenv('XPC_API_KEY')
+XPC_FHIR_API_BASE_URL = os.getenv('XPC_FHIR_API_BASE_URL')
+
+# Print the loaded environment variables for debugging
+# print(f"XPC_API_KEY: {XPC_API_KEY}")
+# print(f"XPC_FHIR_API_BASE_URL: {XPC_FHIR_API_BASE_URL}")
+
 
 # Base URLs for each FHIR resource
 APPOINTMENT_URL = XPC_FHIR_API_BASE_URL.rstrip('/') + '/Appointment'

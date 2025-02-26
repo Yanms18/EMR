@@ -23,24 +23,19 @@ def create_patient0(firstname, lastname, age, sex, gender):
         'Content-Type': 'application/json'
     }
     payload = {
-        "resourceType":
-        "Patient",
+        "resourceType": "Patient",
         "extension": [{
-            "url":
-            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
             "valueCode": sex
         }],
-        "gender":
-        gender,
-        "active":
-        True,
+        "gender": gender,
+        "active": True,
         "name": [{
             "use": "official",
             "family": lastname,
             "given": [firstname]
         }],
-        "birthDate":
-        age_to_iso_birthday_fixed(age)
+        "birthDate": age_to_iso_birthday_fixed(age)
     }
     response = requests.post(patient_url, headers=headers, json=payload)
 
@@ -48,5 +43,11 @@ def create_patient0(firstname, lastname, age, sex, gender):
     print("Status Code:", response.status_code)
     print("Response Body:", response.text)
 
+    # Check if the response body is empty
+    if not response.text:
+        return {"status_code": response.status_code, "message": "Patient created successfully, but no response body."}
 
-# print URL with patient key in response header
+    try:
+        return response.json()
+    except requests.exceptions.JSONDecodeError:
+        return {"status_code": response.status_code, "message": "Patient created successfully, but response is not valid JSON."}
