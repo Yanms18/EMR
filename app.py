@@ -3,38 +3,26 @@ import io
 import os
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
-<<<<<<< HEAD
 from datetime import datetime, timedelta
 from flask import Flask, request, render_template, jsonify
 from patient0 import create_patient0
 from appointment import search_patient_by_name, search_practitioner_by_name, create_appointment
-=======
-from datetime import datetime
-from flask import Flask, request, render_template, jsonify
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
 
 app = Flask(__name__)
 
 # Patient data model
 @dataclass
 class Patient:
-<<<<<<< HEAD
     first_name: str
     last_name: str
     age: int
     gender: str
     sex: str
-=======
-    name: str
-    age: int
-    gender: str
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     appointment_type: str
     appointment_date: datetime
     appointment_time: datetime
     physician: str
     reason_for_visit: str
-<<<<<<< HEAD
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -43,20 +31,10 @@ class Patient:
             'age': self.age,
             'gender': self.gender,
             'sex': self.sex,
-=======
-    hpi: str  # History of Present Illness
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            'name': self.name,
-            'age': self.age,
-            'gender': self.gender,
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
             'appointment_type': self.appointment_type,
             'appointment_date': self.appointment_date.strftime('%Y-%m-%d') if isinstance(self.appointment_date, datetime) else self.appointment_date,
             'appointment_time': self.appointment_time.strftime('%H:%M:%S') if isinstance(self.appointment_time, datetime) else self.appointment_time,
             'physician': self.physician,
-<<<<<<< HEAD
             'reason_for_visit': self.reason_for_visit
         }
 
@@ -87,30 +65,6 @@ def parse_medical_csv(file_content: str) -> List[Patient]:
     
     format_type = detect_csv_format(reader)
     
-=======
-            'reason_for_visit': self.reason_for_visit,
-            'hpi': self.hpi
-        }
-
-# Function to parse the CSV file - detects and handles different formats
-def parse_medical_csv(file_content: str) -> List[Patient]:
-    patients = []
-
-    # Read CSV into memory
-    csv_io = io.StringIO(file_content)
-    reader = list(csv.reader(csv_io))
-
-    # If file is empty
-    if not reader:
-        raise ValueError("CSV file is empty")
-
-    # Detect CSV format
-    # Format 1: Field names in first column, patients in columns 3+
-    # Format 2: Field names in first row, patients in rows 2+
-
-    format_type = detect_csv_format(reader)
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     if format_type == "column_based":
         # Original format: fields in first column
         return parse_column_based_csv(reader)
@@ -125,7 +79,6 @@ def detect_csv_format(reader):
     # Check first rows/columns for clues
     if not reader or len(reader) < 2 or len(reader[0]) < 2:
         return "unknown"
-<<<<<<< HEAD
     
     # Look at first column for standard field names
     first_column_fields = [row[0].strip().lower() for row in reader if row and len(row) > 0]
@@ -135,17 +88,6 @@ def detect_csv_format(reader):
     first_row_fields = [cell.strip().lower() for cell in reader[0] if cell]
     header_matches = sum(1 for field in ['name', 'age', 'gender', 'appointment'] if field in first_row_fields)
     
-=======
-
-    # Look at first column for standard field names
-    first_column_fields = [row[0].strip().lower() for row in reader if row and len(row) > 0]
-    field_name_matches = sum(1 for field in ['name', 'age', 'gender', 'appointment'] if field in first_column_fields)
-
-    # Look at first row for standard field names
-    first_row_fields = [cell.strip().lower() for cell in reader[0] if cell]
-    header_matches = sum(1 for field in ['name', 'age', 'gender', 'appointment'] if field in first_row_fields)
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     # Decide based on matches
     if field_name_matches >= 3:  # At least 3 field names found in first column
         return "column_based"
@@ -175,11 +117,7 @@ def parse_date_time(date_str, time_str):
                 appointment_date = date_str
         except Exception:
             appointment_date = date_str
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     appointment_time = None
     if time_str:
         try:
@@ -196,11 +134,7 @@ def parse_date_time(date_str, time_str):
                 appointment_time = time_str
         except Exception:
             appointment_time = time_str
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     return appointment_date, appointment_time
 
 def parse_column_based_csv(reader):
@@ -208,46 +142,29 @@ def parse_column_based_csv(reader):
     Parse CSV where field names are in first column and patient data is in columns
     """
     patients = []
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     # Extract field names from first column (skipping empty cells)
     field_names = []
     for row in reader:
         if row and row[0].strip():
             field_names.append(row[0].strip())
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     # Determine how many patients we have (columns with data starting from the 3rd column)
     patient_columns = []
     for col_index in range(2, len(reader[0])):
         # Check if this column has a name (usually in first row with data)
         if any(row[col_index].strip() for row in reader):
             patient_columns.append(col_index)
-<<<<<<< HEAD
     
     # Create a patient for each data column
     for col_index in patient_columns:
         patient_data = {}
         
-=======
-
-    # Create a patient for each data column
-    for col_index in patient_columns:
-        patient_data = {}
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
         # Extract data for each field
         for row_index, row in enumerate(reader):
             if row_index < len(field_names) and col_index < len(row):
                 field = field_names[row_index].lower().replace(' ', '_')
                 patient_data[field] = row[col_index]
-<<<<<<< HEAD
         
         try:
             first_name, last_name = split_name(patient_data.get('name', ''))
@@ -277,35 +194,6 @@ def parse_column_based_csv(reader):
             print(f"Error parsing patient data in column-based format: {e}")
             continue
     
-=======
-
-        try:
-            # Parse dates and times
-            appointment_date, appointment_time = parse_date_time(
-                patient_data.get('appointment_date', ''),
-                patient_data.get('appointment_time', '')
-            )
-
-            # Create patient object
-            patient = Patient(
-                name=patient_data.get('name', ''),
-                age=int(patient_data.get('age', 0)) if patient_data.get('age', '').strip().isdigit() else 0,
-                gender=patient_data.get('gender', ''),
-                appointment_type=patient_data.get('type_of_appointment', ''),
-                appointment_date=appointment_date,
-                appointment_time=appointment_time,
-                physician=patient_data.get('physician', ''),
-                reason_for_visit=patient_data.get('reason_for_visit', ''),
-                hpi=patient_data.get('hpi', '')
-            )
-
-            patients.append(patient)
-
-        except Exception as e:
-            print(f"Error parsing patient data in column-based format: {e}")
-            continue
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     return patients
 
 def parse_row_based_csv(reader):
@@ -313,7 +201,6 @@ def parse_row_based_csv(reader):
     Parse CSV where field names are in first row and each patient is a row
     """
     patients = []
-<<<<<<< HEAD
     
     if len(reader) < 2:
         raise ValueError("CSV file doesn't have enough rows")
@@ -329,43 +216,18 @@ def parse_row_based_csv(reader):
         if not any(cell.strip() for cell in row):
             continue
             
-=======
-
-    if len(reader) < 2:
-        raise ValueError("CSV file doesn't have enough rows")
-
-    # Get field names from first row
-    headers = [h.strip() for h in reader[0]]
-
-    # Process each row (starting from second row)
-    for row_index in range(1, len(reader)):
-        row = reader[row_index]
-
-        # Skip empty rows
-        if not any(cell.strip() for cell in row):
-            continue
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
         # Map data to field names
         patient_data = {}
         for col_index, header in enumerate(headers):
             if col_index < len(row):
                 if header:  # Only process if header exists
                     patient_data[header.lower().replace(' ', '_')] = row[col_index].strip()
-<<<<<<< HEAD
         
         try:
             first_name, last_name = split_name(patient_data.get('name', ''))
             # Handle special fields (name, age, type of appointment)
             name = patient_data.get('name', '')
             
-=======
-
-        try:
-            # Handle special fields (name, age, type of appointment)
-            name = patient_data.get('name', '')
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
             # Age needs to be an integer
             age_str = patient_data.get('age', '0')
             try:
@@ -373,7 +235,6 @@ def parse_row_based_csv(reader):
             except ValueError:
                 print(f"Invalid age value: {age_str}, defaulting to 0")
                 age = 0
-<<<<<<< HEAD
                 
             # Parse dates and times
             # appointment_date, appointment_time = parse_date_time(
@@ -412,45 +273,6 @@ def parse_row_based_csv(reader):
 #         "message": "Patient data successfully sent to external system",
 #         "patient_id": f"P{hash(patient_data['first_name']) % 10000}"  # Generate a fake patient ID
 #     }
-=======
-
-            # Parse dates and times
-            appointment_date, appointment_time = parse_date_time(
-                patient_data.get('appointment_date', ''),
-                patient_data.get('appointment_time', '')
-            )
-
-            # Create patient object
-            patient = Patient(
-                name=name,
-                age=age,
-                gender=patient_data.get('gender', ''),
-                appointment_type=patient_data.get('type_of_appointment', ''),
-                appointment_date=appointment_date,
-                appointment_time=appointment_time,
-                physician=patient_data.get('physician', ''),
-                reason_for_visit=patient_data.get('reason_for_visit', ''),
-                hpi=patient_data.get('hpi', '')
-            )
-
-            patients.append(patient)
-
-        except Exception as e:
-            print(f"Error parsing patient data in row-based format: {e}")
-            continue
-
-    return patients
-
-# Mock function to simulate API call (would be replaced with actual API integration)
-def send_to_external_api(patient_data: Dict[str, Any]) -> Dict[str, Any]:
-    # This is where you would call your third-party API
-    # For now, we'll just simulate a successful response
-    return {
-        "success": True,
-        "message": "Patient data successfully sent to external system",
-        "patient_id": f"P{hash(patient_data['name']) % 10000}"  # Generate a fake patient ID
-    }
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
 
 # Routes
 @app.route('/')
@@ -461,7 +283,6 @@ def index():
 def process_csv():
     if 'csv_file' not in request.files:
         return jsonify({'error': 'No file provided'})
-<<<<<<< HEAD
     
     file = request.files['csv_file']
     if file.filename == '':
@@ -535,43 +356,12 @@ def process_csv():
                     'patient': patient_dict
                 })
         
-=======
-
-    file = request.files['csv_file']
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'})
-
-    try:
-        content = file.read().decode('utf-8')
-        patients = parse_medical_csv(content)
-
-        if not patients:
-            return jsonify({'error': 'No patient data found in CSV'})
-
-        result = []
-        for patient in patients:
-            patient_dict = patient.to_dict()
-            # Simulate API call (if send_api is checked)
-            api_result = None
-            if request.form.get('send_api') == 'true':
-                api_result = send_to_external_api(patient_dict)
-
-            result.append({
-                'patient': patient_dict,
-                'api_result': api_result
-            })
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
         return jsonify({
             'success': True,
             'data': result,
             'count': len(result)
         })
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -579,11 +369,7 @@ def process_csv():
 def create_template():
     if not os.path.exists('templates'):
         os.makedirs('templates')
-<<<<<<< HEAD
     
-=======
-
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     with open('templates/index.html', 'w') as f:
         f.write("""
 <!DOCTYPE html>
@@ -756,36 +542,21 @@ Name,,Ben Smith,Mary Smith
 ,,,
 Age,,37,25
 Gender,,Male,Female
-<<<<<<< HEAD
 Sex,,Male,Female
-=======
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
 Type of appointment,,Office visit,Phone call
 Appointment date,,2/10/25,3/2/2025
 Appointment time,,2:00 PM,1:00:00 PM
 Physician,,"Paulius Mui, MD","Paulius Mui, MD"
-<<<<<<< HEAD
 Reason for visit,,cough,Flu</pre>
-=======
-Reason for visit,,cough,Flu
-HPI,,it was for 2 days,it been on for a week</pre>
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
             </div>
             
             <div class="format-content">
                 <p>Fields in first row, patients in rows:</p>
                 <pre>
-<<<<<<< HEAD
 Name,Age,Gender,Sex,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit
 John Doe,34,male,Male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold
 Ben Smith,37,Male,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough
 Mary Smith,25,Female,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu</pre>
-=======
-Name,Age,Gender,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit,HPI
-John Doe,34,male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold,For 4 weeks
-Ben Smith,37,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough,it was for 2 days
-Mary Smith,25,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu,it been on for a week</pre>
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
             </div>
         </div>
         
@@ -863,25 +634,15 @@ Mary Smith,25,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu,it bee
                         const patient = item.patient;
                         html += `
                             <div class="patient-card">
-<<<<<<< HEAD
                                 <h3>Patient ${index + 1}: ${patient.first_name} ${patient.last_name}</h3>
                                 <div class="patient-detail"><strong>Age:</strong> ${patient.age}</div>
                                 <div class="patient-detail"><strong>Gender:</strong> ${patient.gender}</div>
                                 <div class="patient-detail"><strong>Sex:</strong> ${patient.sex}</div>
-=======
-                                <h3>Patient ${index + 1}: ${patient.name}</h3>
-                                <div class="patient-detail"><strong>Age:</strong> ${patient.age}</div>
-                                <div class="patient-detail"><strong>Gender:</strong> ${patient.gender}</div>
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
                                 <div class="patient-detail"><strong>Appointment Type:</strong> ${patient.appointment_type}</div>
                                 <div class="patient-detail"><strong>Appointment Date:</strong> ${patient.appointment_date}</div>
                                 <div class="patient-detail"><strong>Appointment Time:</strong> ${patient.appointment_time}</div>
                                 <div class="patient-detail"><strong>Physician:</strong> ${patient.physician}</div>
                                 <div class="patient-detail"><strong>Reason for Visit:</strong> ${patient.reason_for_visit}</div>
-<<<<<<< HEAD
-=======
-                                <div class="patient-detail"><strong>HPI:</strong> ${patient.hpi}</div>
->>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
                                 
                                 ${item.api_result ? `
                                 <div class="api-result">
