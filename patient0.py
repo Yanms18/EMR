@@ -50,4 +50,8 @@ def create_patient0(firstname, lastname, age, sex, gender):
     try:
         return response.json()
     except requests.exceptions.JSONDecodeError:
+<<<<<<< HEAD
         return {"status_code": response.status_code, "message": "Patient created successfully, but response is not valid JSON."}
+=======
+        return {"status_code": response.status_code, "message": "Patient created successfully, but response is not valid JSON."}
+>>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04

@@ -37,15 +37,25 @@ def create_appointment(patient_id, practitioner_id, reason_text, start_time, end
             f"Invalid appointment type: {appointment_type_display}. "
             f"Valid types are: {list(APPOINTMENT_TYPE_MAP.keys())}"
         )
+<<<<<<< HEAD
     
     appointment_type_code = APPOINTMENT_TYPE_MAP[appointment_type_display]
     
+=======
+
+    appointment_type_code = APPOINTMENT_TYPE_MAP[appointment_type_display]
+
+>>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     headers = {
         "Authorization": f"Bearer {XPC_API_KEY}",
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     payload = {
         "resourceType": "Appointment",
         "reasonCode": [{
@@ -77,9 +87,15 @@ def create_appointment(patient_id, practitioner_id, reason_text, start_time, end
         { "reference": "Location/1"}],
         "status": "proposed"
     }
+<<<<<<< HEAD
     
     response = requests.post(APPOINTMENT_URL, headers=headers, json=payload)
     
+=======
+
+    response = requests.post(APPOINTMENT_URL, headers=headers, json=payload)
+
+>>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     return {
         "status_code": response.status_code,
         "response_body": response.text
@@ -96,6 +112,7 @@ def search_patient_by_name(patient_name):
     # FHIR search using the 'name' parameter
     params = {"name": patient_name}
     response = requests.get(PATIENT_URL, headers=headers, params=params)
+<<<<<<< HEAD
     
     if response.status_code != 200:
         raise Exception(f"Error searching patient: {response.status_code} {response.text}")
@@ -104,6 +121,16 @@ def search_patient_by_name(patient_name):
     if data.get("total", 0) == 0 or "entry" not in data:
         raise Exception(f"No patient found with name '{patient_name}'")
     
+=======
+
+    if response.status_code != 200:
+        raise Exception(f"Error searching patient: {response.status_code} {response.text}")
+
+    data = response.json()
+    if data.get("total", 0) == 0 or "entry" not in data:
+        raise Exception(f"No patient found with name '{patient_name}'")
+
+>>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     # Extract and return the patient id from the first entry
     patient_id = data["entry"][0]["resource"]["id"]
     return patient_id
@@ -119,6 +146,7 @@ def search_practitioner_by_name(practitioner_name):
     # FHIR search using the 'name' parameter
     params = {"name": practitioner_name}
     response = requests.get(PRACTITIONER_URL, headers=headers, params=params)
+<<<<<<< HEAD
     
     if response.status_code != 200:
         raise Exception(f"Error searching practitioner: {response.status_code} {response.text}")
@@ -127,6 +155,16 @@ def search_practitioner_by_name(practitioner_name):
     if data.get("total", 0) == 0 or "entry" not in data:
         raise Exception(f"No practitioner found with name '{practitioner_name}'")
     
+=======
+
+    if response.status_code != 200:
+        raise Exception(f"Error searching practitioner: {response.status_code} {response.text}")
+
+    data = response.json()
+    if data.get("total", 0) == 0 or "entry" not in data:
+        raise Exception(f"No practitioner found with name '{practitioner_name}'")
+
+>>>>>>> 1488e6d3eb876b58aaaa28400b2d25045fd31f04
     # Extract and return the practitioner id from the first entry
     practitioner_id = data["entry"][0]["resource"]["id"]
     return practitioner_id
