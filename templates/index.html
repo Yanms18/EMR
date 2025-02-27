@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XPC Medical Data Processor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        .checkbox-group {
+            margin-top: 15px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+            background-color: #fff;
+            display: none;
+        }
+        .patient-card {
+            background-color: #f1f1f1;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        .patient-detail {
+            margin-bottom: 8px;
+        }
+        .patient-detail strong {
+            display: inline-block;
+            width: 150px;
+        }
+        .api-result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f4fc;
+            border-radius: 4px;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #fadbd8;
+            border-radius: 4px;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .csv-format {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #eaf2f8;
+            border-radius: 4px;
+        }
+        .format-tabs {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .format-tab {
+            padding: 8px 16px;
+            background-color: #ddd;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .format-tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .format-content {
+            display: none;
+        }
+        .format-content.active {
+            display: block;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .note {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fdebd0;
+            border-left: 4px solid #f39c12;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>XPC Medical Data Processor</h1>
+        <p>Upload a CSV file containing patient data and convert it to structured data models.</p>
+        
+        <div class="csv-format">
+            <h3>Supported CSV Formats:</h3>
+            
+            <div class="format-tabs">
+                <div class="format-tab active" onclick="showFormat(0)">Format A: Column-based</div>
+                <div class="format-tab" onclick="showFormat(1)">Format B: Row-based</div>
+            </div>
+            
+            <div class="format-content active">
+                <p>Fields in first column, patients in columns:</p>
+                <pre>
+,,,
+Name,,Ben Smith,Mary Smith
+,,,
+Age,,37,25
+Gender,,Male,Female
+Sex,,Male,Female
+Type of appointment,,Office visit,Phone call
+Appointment date,,2/10/25,3/2/2025
+Appointment time,,2:00 PM,1:00:00 PM
+Physician,,"Paulius Mui, MD","Paulius Mui, MD"
+Reason for visit,,cough,Flu</pre>
+            </div>
+            
+            <div class="format-content">
+                <p>Fields in first row, patients in rows:</p>
+                <pre>
+Name,Age,Gender,Sex,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit
+John Doe,34,male,Male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold
+Ben Smith,37,Male,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough
+Mary Smith,25,Female,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu</pre>
+            </div>
+        </div>
+        
+        <div class="note">
+            <strong>Note:</strong> The system will automatically detect your CSV format.
+        </div>
+        
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="csv_file">Upload Medical CSV File:</label>
+                <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="send_api" name="send_api" value="true">
+                <label for="send_api" style="display:inline;">Simulate sending to external API</label>
+            </div>
+            
+            <button type="submit">Process Data</button>
+        </form>
+        
+        <div class="loader" id="loader"></div>
+        
+        <div id="result">
+            <h2>Results</h2>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function showFormat(index) {
+            const tabs = document.querySelectorAll('.format-tab');
+            const contents = document.querySelectorAll('.format-content');
+            
+            // Remove active class from all tabs and contents
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            tabs[index].classList.add('active');
+            contents[index].classList.add('active');
+        }
+        
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const loader = document.getElementById('loader');
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            loader.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            const formData = new FormData(this);
+            formData.append('send_api', document.getElementById('send_api').checked ? 'true' : 'false');
+            
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loader.style.display = 'none';
+                resultDiv.style.display = 'block';
+                
+                if (data.error) {
+                    resultContent.innerHTML = `<div class="error">${data.error}</div>`;
+                    return;
+                }
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    let html = `<p>Successfully processed ${data.count} patient records:</p>`;
+                    
+                    data.data.forEach((item, index) => {
+                        const patient = item.patient;
+                        html += `
+                            <div class="patient-card">
+                                <h3>Patient ${index + 1}: ${patient.first_name} ${patient.last_name}</h3>
+                                <div class="patient-detail"><strong>Age:</strong> ${patient.age}</div>
+                                <div class="patient-detail"><strong>Gender:</strong> ${patient.gender}</div>
+                                <div class="patient-detail"><strong>Sex:</strong> ${patient.sex}</div>
+                                <div class="patient-detail"><strong>Appointment Type:</strong> ${patient.appointment_type}</div>
+                                <div class="patient-detail"><strong>Appointment Date:</strong> ${patient.appointment_date}</div>
+                                <div class="patient-detail"><strong>Appointment Time:</strong> ${patient.appointment_time}</div>
+                                <div class="patient-detail"><strong>Physician:</strong> ${patient.physician}</div>
+                                <div class="patient-detail"><strong>Reason for Visit:</strong> ${patient.reason_for_visit}</div>
+                                
+                                ${item.api_result ? `
+                                <div class="api-result">
+                                    <strong>API Response:</strong><br>
+                                    Status: ${item.api_result.success ? 'Success' : 'Failed'}<br>
+                                    Message: ${item.api_result.message}<br>
+                                    Patient ID: ${item.api_result.patient_id}
+                                </div>` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    resultContent.innerHTML = html;
+                } else {
+                    resultContent.innerHTML = `<div class="error">No patient data found or processing error occurred.</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loader.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultContent.innerHTML = `<div class="error">An error occurred: ${error}</div>`;
+            });
+        });
+    </script>
+</body>
+</html>
+        
