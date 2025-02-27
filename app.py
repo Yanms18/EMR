@@ -3,36 +3,49 @@ import io
 import os
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, request, render_template, jsonify
+from patient0 import create_patient0
+from appointment import search_patient_by_name, search_practitioner_by_name, create_appointment
 
 app = Flask(__name__)
 
 # Patient data model
 @dataclass
 class Patient:
-    name: str
+    first_name: str
+    last_name: str
     age: int
     gender: str
+    sex: str
     appointment_type: str
     appointment_date: datetime
     appointment_time: datetime
     physician: str
     reason_for_visit: str
-    hpi: str  # History of Present Illness
     
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'name': self.name,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
             'age': self.age,
             'gender': self.gender,
+            'sex': self.sex,
             'appointment_type': self.appointment_type,
             'appointment_date': self.appointment_date.strftime('%Y-%m-%d') if isinstance(self.appointment_date, datetime) else self.appointment_date,
             'appointment_time': self.appointment_time.strftime('%H:%M:%S') if isinstance(self.appointment_time, datetime) else self.appointment_time,
             'physician': self.physician,
-            'reason_for_visit': self.reason_for_visit,
-            'hpi': self.hpi
+            'reason_for_visit': self.reason_for_visit
         }
+
+def split_name(full_name: str) -> (str, str):
+    parts = full_name.split()
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    elif len(parts) > 2:
+        return parts[0], ' '.join(parts[1:])
+    else:
+        return full_name, ''
 
 # Function to parse the CSV file - detects and handles different formats
 def parse_medical_csv(file_content: str) -> List[Patient]:
@@ -154,23 +167,25 @@ def parse_column_based_csv(reader):
                 patient_data[field] = row[col_index]
         
         try:
+            first_name, last_name = split_name(patient_data.get('name', ''))
             # Parse dates and times
-            appointment_date, appointment_time = parse_date_time(
-                patient_data.get('appointment_date', ''),
-                patient_data.get('appointment_time', '')
-            )
+            # appointment_date, appointment_time = parse_date_time(
+            #     patient_data.get('appointment_date', ''),
+            #     patient_data.get('appointment_time', '')
+            # )
             
             # Create patient object
             patient = Patient(
-                name=patient_data.get('name', ''),
+                first_name=first_name,
+                last_name=last_name,
                 age=int(patient_data.get('age', 0)) if patient_data.get('age', '').strip().isdigit() else 0,
                 gender=patient_data.get('gender', ''),
+                sex=patient_data.get('sex', ''),
                 appointment_type=patient_data.get('type_of_appointment', ''),
-                appointment_date=appointment_date,
-                appointment_time=appointment_time,
+                appointment_date=patient_data.get('appointment_date', ''),
+                appointment_time=patient_data.get('appointment_time', ''),
                 physician=patient_data.get('physician', ''),
-                reason_for_visit=patient_data.get('reason_for_visit', ''),
-                hpi=patient_data.get('hpi', '')
+                reason_for_visit=patient_data.get('reason_for_visit', '')
             )
             
             patients.append(patient)
@@ -209,6 +224,7 @@ def parse_row_based_csv(reader):
                     patient_data[header.lower().replace(' ', '_')] = row[col_index].strip()
         
         try:
+            first_name, last_name = split_name(patient_data.get('name', ''))
             # Handle special fields (name, age, type of appointment)
             name = patient_data.get('name', '')
             
@@ -221,22 +237,23 @@ def parse_row_based_csv(reader):
                 age = 0
                 
             # Parse dates and times
-            appointment_date, appointment_time = parse_date_time(
-                patient_data.get('appointment_date', ''),
-                patient_data.get('appointment_time', '')
-            )
+            # appointment_date, appointment_time = parse_date_time(
+            #     patient_data.get('appointment_date', ''),
+            #     patient_data.get('appointment_time', '')
+            # )
             
             # Create patient object
             patient = Patient(
-                name=name,
+                firstname=first_name,
+                lastname=last_name,
                 age=age,
                 gender=patient_data.get('gender', ''),
+                sex=patient_data.get('sex', ''),
                 appointment_type=patient_data.get('type_of_appointment', ''),
-                appointment_date=appointment_date,
-                appointment_time=appointment_time,
+                 appointment_date=patient_data.get('appointment_date', ''),
+                appointment_time=patient_data.get('appointment_time', ''),
                 physician=patient_data.get('physician', ''),
-                reason_for_visit=patient_data.get('reason_for_visit', ''),
-                hpi=patient_data.get('hpi', '')
+                reason_for_visit=patient_data.get('reason_for_visit', '')
             )
             
             patients.append(patient)
@@ -248,14 +265,14 @@ def parse_row_based_csv(reader):
     return patients
 
 # Mock function to simulate API call (would be replaced with actual API integration)
-def send_to_external_api(patient_data: Dict[str, Any]) -> Dict[str, Any]:
-    # This is where you would call your third-party API
-    # For now, we'll just simulate a successful response
-    return {
-        "success": True,
-        "message": "Patient data successfully sent to external system",
-        "patient_id": f"P{hash(patient_data['name']) % 10000}"  # Generate a fake patient ID
-    }
+# def send_to_external_api(patient_data: Dict[str, Any]) -> Dict[str, Any]:
+#     # This is where you would call your third-party API
+#     # For now, we'll just simulate a successful response
+#     return {
+#         "success": True,
+#         "message": "Patient data successfully sent to external system",
+#         "patient_id": f"P{hash(patient_data['first_name']) % 10000}"  # Generate a fake patient ID
+#     }
 
 # Routes
 @app.route('/')
@@ -281,15 +298,63 @@ def process_csv():
         result = []
         for patient in patients:
             patient_dict = patient.to_dict()
-            # Simulate API call (if send_api is checked)
-            api_result = None
-            if request.form.get('send_api') == 'true':
-                api_result = send_to_external_api(patient_dict)
             
-            result.append({
-                'patient': patient_dict,
-                'api_result': api_result
-            })
+            firstname = patient.first_name
+            lastname = patient.last_name
+            age = 97
+            sex = patient.sex  # Options: F, M, OTH, UNK
+            gender = patient.gender  # Options: female, male, other, unknown
+
+            # Create patient
+            patient_response = create_patient0(firstname, lastname, age, sex, gender)
+
+            # Input the appointment details
+            patient_name = f"{patient.first_name} {patient.last_name}"
+            practitioner_name = patient.physician
+            appointment_date = patient.appointment_date  # YYYY-MM-DD format
+            appointment_time = patient.appointment_time    # HH:MM:SS format
+            reason_text = patient.reason_for_visit
+            appointment_type_display = patient.appointment_type  # Options: Home Visit, Telemedicine, Office Visit, Lab Visit, Phone Call
+            
+            # Simulate API call (if send_api is checked)
+            if request.form.get('send_api') == 'true':
+                # Combine date and time into a single datetime object
+                start_datetime = datetime.strptime(f"{appointment_date}T{appointment_time}", "%Y-%m-%dT%H:%M:%S")
+
+                # Calculate end time by adding 1 hour to start time
+                end_datetime = start_datetime + timedelta(hours=1)
+
+                # Format start and end times in the required format
+                start_time = start_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+                end_time = end_datetime.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+                # Search for the practitioner ID based on their name
+                try:
+                    patient_id = search_patient_by_name(patient_name)
+                    print(f"Found patient ID: {patient_id} for patient name: {patient_name}")
+                except Exception as e:
+                    print(f"Error finding patient: {e}")
+                    patient_id = None
+
+                try:
+                    practitioner_id = search_practitioner_by_name(practitioner_name)
+                    print(f"Found practitioner ID: {practitioner_id} for practitioner name: {practitioner_name}")
+                except Exception as e:
+                    print(f"Error finding practitioner: {e}")
+                    practitioner_id = None
+
+                if not practitioner_id:
+                    raise ValueError("Failed to find practitioner. No practitioner ID returned.")
+
+                # Create appointment
+                appointment_response = create_appointment(
+                    patient_id, practitioner_id, reason_text, start_time, end_time, appointment_type_display
+                )
+                result.append({
+                    'patient_response': patient_response,
+                    'appointment_response': appointment_response,
+                    'patient': patient_dict
+                })
         
         return jsonify({
             'success': True,
@@ -477,21 +542,21 @@ Name,,Ben Smith,Mary Smith
 ,,,
 Age,,37,25
 Gender,,Male,Female
+Sex,,Male,Female
 Type of appointment,,Office visit,Phone call
 Appointment date,,2/10/25,3/2/2025
 Appointment time,,2:00 PM,1:00:00 PM
 Physician,,"Paulius Mui, MD","Paulius Mui, MD"
-Reason for visit,,cough,Flu
-HPI,,it was for 2 days,it been on for a week</pre>
+Reason for visit,,cough,Flu</pre>
             </div>
             
             <div class="format-content">
                 <p>Fields in first row, patients in rows:</p>
                 <pre>
-Name,Age,Gender,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit,HPI
-John Doe,34,male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold,For 4 weeks
-Ben Smith,37,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough,it was for 2 days
-Mary Smith,25,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu,it been on for a week</pre>
+Name,Age,Gender,Sex,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit
+John Doe,34,male,Male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold
+Ben Smith,37,Male,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough
+Mary Smith,25,Female,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu</pre>
             </div>
         </div>
         
@@ -569,15 +634,15 @@ Mary Smith,25,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu,it bee
                         const patient = item.patient;
                         html += `
                             <div class="patient-card">
-                                <h3>Patient ${index + 1}: ${patient.name}</h3>
+                                <h3>Patient ${index + 1}: ${patient.first_name} ${patient.last_name}</h3>
                                 <div class="patient-detail"><strong>Age:</strong> ${patient.age}</div>
                                 <div class="patient-detail"><strong>Gender:</strong> ${patient.gender}</div>
+                                <div class="patient-detail"><strong>Sex:</strong> ${patient.sex}</div>
                                 <div class="patient-detail"><strong>Appointment Type:</strong> ${patient.appointment_type}</div>
                                 <div class="patient-detail"><strong>Appointment Date:</strong> ${patient.appointment_date}</div>
                                 <div class="patient-detail"><strong>Appointment Time:</strong> ${patient.appointment_time}</div>
                                 <div class="patient-detail"><strong>Physician:</strong> ${patient.physician}</div>
                                 <div class="patient-detail"><strong>Reason for Visit:</strong> ${patient.reason_for_visit}</div>
-                                <div class="patient-detail"><strong>HPI:</strong> ${patient.hpi}</div>
                                 
                                 ${item.api_result ? `
                                 <div class="api-result">

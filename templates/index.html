@@ -169,21 +169,21 @@ Name,,Ben Smith,Mary Smith
 ,,,
 Age,,37,25
 Gender,,Male,Female
+Sex,,Male,Female
 Type of appointment,,Office visit,Phone call
 Appointment date,,2/10/25,3/2/2025
 Appointment time,,2:00 PM,1:00:00 PM
 Physician,,"Paulius Mui, MD","Paulius Mui, MD"
-Reason for visit,,cough,Flu
-HPI,,it was for 2 days,it been on for a week</pre>
+Reason for visit,,cough,Flu</pre>
             </div>
             
             <div class="format-content">
                 <p>Fields in first row, patients in rows:</p>
                 <pre>
-Name,Age,Gender,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit,HPI
-John Doe,34,male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold,For 4 weeks
-Ben Smith,37,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough,it was for 2 days
-Mary Smith,25,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu,it been on for a week</pre>
+Name,Age,Gender,Sex,Type of appointment,Appointment date,Appointment time,Physician,Reason for visit
+John Doe,34,male,Male,Phone call,3/21/2025,11:00:00 AM,Wits,Cold
+Ben Smith,37,Male,Male,Office visit,2/10/25,2:00 PM,"Paulius Mui, MD",cough
+Mary Smith,25,Female,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu</pre>
             </div>
         </div>
         
@@ -261,15 +261,15 @@ Mary Smith,25,Female,Phone call,3/2/2025,1:00:00 PM,"Paulius Mui, MD",Flu,it bee
                         const patient = item.patient;
                         html += `
                             <div class="patient-card">
-                                <h3>Patient ${index + 1}: ${patient.name}</h3>
+                                <h3>Patient ${index + 1}: ${patient.first_name} ${patient.last_name}</h3>
                                 <div class="patient-detail"><strong>Age:</strong> ${patient.age}</div>
                                 <div class="patient-detail"><strong>Gender:</strong> ${patient.gender}</div>
+                                <div class="patient-detail"><strong>Sex:</strong> ${patient.sex}</div>
                                 <div class="patient-detail"><strong>Appointment Type:</strong> ${patient.appointment_type}</div>
                                 <div class="patient-detail"><strong>Appointment Date:</strong> ${patient.appointment_date}</div>
                                 <div class="patient-detail"><strong>Appointment Time:</strong> ${patient.appointment_time}</div>
                                 <div class="patient-detail"><strong>Physician:</strong> ${patient.physician}</div>
                                 <div class="patient-detail"><strong>Reason for Visit:</strong> ${patient.reason_for_visit}</div>
-                                <div class="patient-detail"><strong>HPI:</strong> ${patient.hpi}</div>
                                 
                                 ${item.api_result ? `
                                 <div class="api-result">
